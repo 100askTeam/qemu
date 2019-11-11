@@ -57,7 +57,9 @@ ubuntu-18.04解压命令如下, 可以得到 **ubuntu-18.04_imx6ul_qemu_system**
 
 ## 3.2 配置、编译、安装
 > ./configure   --prefix=$PWD/ --target-list="arm-softmmu arm-linux-user aarch64-softmmu aarch64-linux-user"    --target-list=arm-softmmu  --enable-debug --enable-sdl  --enable-kvm --enable-tools
+
 > make 
+
 > make install
 
 配置、编译过程中有可能出错，<br>
