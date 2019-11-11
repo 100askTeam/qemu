@@ -1,0 +1,2 @@
+tests/qapi-schema/args-name-clash.json: In command 'oops':
+tests/qapi-schema/args-name-clash.json:4: parameter 'a_b' collides with parameter 'a-b'

@@ -1,0 +1,2 @@
+tests/qapi-schema/enum-bad-prefix.json: In enum 'MyEnum':
+tests/qapi-schema/enum-bad-prefix.json:2: 'prefix' must be a string

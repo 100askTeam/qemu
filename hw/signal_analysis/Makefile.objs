@@ -1,0 +1,1 @@
+common-obj-y += circle_buffer.o  csv.o  sample.o

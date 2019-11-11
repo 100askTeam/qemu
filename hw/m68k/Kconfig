@@ -1,0 +1,14 @@
+config AN5206
+    bool
+    select COLDFIRE
+    select PTIMER
+
+config MCF5208
+    bool
+    select COLDFIRE
+    select PTIMER
+
+config NEXTCUBE
+    bool
+    select FRAMEBUFFER
+    select ESCC
