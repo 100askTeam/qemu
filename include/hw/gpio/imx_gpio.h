@@ -61,6 +61,7 @@ typedef struct IMXGPIOState {
 } IMXGPIOState;
 
 int imx_gpio_ui_need_update(int *led_status);
+void notify_imx_gpio_change(int group, int pin, int level);
 
 
 #endif /* IMX_GPIO_H */

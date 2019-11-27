@@ -27,6 +27,8 @@
 #include "hw/arm/fsl-imx6ul.h"
 #include "hw/signal_analysis/sample.h"
 #include "hw/display/100ask_qemu_fb.h"
+#include "ui/button_ui.h"
+#include "hw/gpio/100ask_imx6ull_buttons.h"
 
 #ifndef DEBUG_IMX_GPIO
 #define DEBUG_IMX_GPIO 0
@@ -86,8 +88,8 @@ static void imx_gpio_update_int(IMXGPIOState *s)
 static void imx_gpio_set_int_line(IMXGPIOState *s, int line, IMXGPIOLevel level)
 {
     /* if this signal isn't configured as an input signal, nothing to do */
-    if (!extract32(s->gdir, line, 1)) {
-        return;
+    if (extract32(s->gdir, line, 1)) {
+         return;
     }
 
     /* When set, EDGE_SEL overrides the ICR config */
@@ -153,63 +155,16 @@ static inline void imx_gpio_set_all_output_lines(IMXGPIOState *s)
     }
 }
 
-static uint64_t imx_gpio_read(void *opaque, hwaddr offset, unsigned size)
+void notify_imx_gpio_change(int group, int pin, int level)
 {
-    IMXGPIOState *s = IMX_GPIO(opaque);
-    uint32_t reg_value = 0;
+	char path[100];
+	sprintf(path,"/machine/soc/gpio%d", group-1);
+    IMXGPIOState *s = IMX_GPIO(object_resolve_path(path, NULL));
 
-    switch (offset) {
-    case DR_ADDR:
-        /*
-         * depending on the "line" configuration, the bit values
-         * are coming either from DR or PSR
-         */
-        reg_value = (s->dr & s->gdir) | (s->psr & ~s->gdir);
-        break;
-
-    case GDIR_ADDR:
-        reg_value = s->gdir;
-        break;
-
-    case PSR_ADDR:
-        reg_value = s->psr & ~s->gdir;
-        break;
-
-    case ICR1_ADDR:
-        reg_value = extract64(s->icr, 0, 32);
-        break;
-
-    case ICR2_ADDR:
-        reg_value = extract64(s->icr, 32, 32);
-        break;
-
-    case IMR_ADDR:
-        reg_value = s->imr;
-        break;
-
-    case ISR_ADDR:
-        reg_value = s->isr;
-        break;
-
-    case EDGE_SEL_ADDR:
-        if (s->has_edge_sel) {
-            reg_value = s->edge_sel;
-        } else {
-            qemu_log_mask(LOG_GUEST_ERROR, "[%s]%s: EDGE_SEL register not "
-                          "present on this version of GPIO device\n",
-                          TYPE_IMX_GPIO, __func__);
-        }
-        break;
-
-    default:
-        qemu_log_mask(LOG_GUEST_ERROR, "[%s]%s: Bad register at offset 0x%"
-                      HWADDR_PRIx "\n", TYPE_IMX_GPIO, __func__, offset);
-        break;
-    }
-
-    DPRINTF("(%s) = 0x%" PRIx32 "\n", imx_gpio_reg_name(offset), reg_value);
-
-    return reg_value;
+	if (s)
+	{
+		imx_gpio_set(s, pin, level);
+	}
 }
 
 static void imx_gpio_info_update (void *opaque, hwaddr offset, uint64_t value,
@@ -280,6 +235,65 @@ static void imx_gpio_info_update (void *opaque, hwaddr offset, uint64_t value,
 	
 }
 
+
+static uint64_t imx_gpio_read(void *opaque, hwaddr offset, unsigned size)
+{
+    IMXGPIOState *s = IMX_GPIO(opaque);
+    uint32_t reg_value = 0;
+
+    switch (offset) {
+    case DR_ADDR:
+        /*
+         * depending on the "line" configuration, the bit values
+         * are coming either from DR or PSR
+         */
+        reg_value = (s->dr & s->gdir) | (s->psr & ~s->gdir);
+        break;
+
+    case GDIR_ADDR:
+        reg_value = s->gdir;
+        break;
+
+    case PSR_ADDR:
+        reg_value = s->psr & ~s->gdir;
+        break;
+
+    case ICR1_ADDR:
+        reg_value = extract64(s->icr, 0, 32);
+        break;
+
+    case ICR2_ADDR:
+        reg_value = extract64(s->icr, 32, 32);
+        break;
+
+    case IMR_ADDR:
+        reg_value = s->imr;
+        break;
+
+    case ISR_ADDR:
+        reg_value = s->isr;
+        break;
+
+    case EDGE_SEL_ADDR:
+        if (s->has_edge_sel) {
+            reg_value = s->edge_sel;
+        } else {
+            qemu_log_mask(LOG_GUEST_ERROR, "[%s]%s: EDGE_SEL register not "
+                          "present on this version of GPIO device\n",
+                          TYPE_IMX_GPIO, __func__);
+        }
+        break;
+
+    default:
+        qemu_log_mask(LOG_GUEST_ERROR, "[%s]%s: Bad register at offset 0x%"
+                      HWADDR_PRIx "\n", TYPE_IMX_GPIO, __func__, offset);
+        break;
+    }
+
+    DPRINTF("(%s) = 0x%" PRIx32 "\n", imx_gpio_reg_name(offset), reg_value);
+
+    return reg_value;
+}
 
 static void imx_gpio_write(void *opaque, hwaddr offset, uint64_t value,
                            unsigned size)

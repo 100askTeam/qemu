@@ -110,7 +110,6 @@ static int devmgr_ui_backgroud_prepare(void)
 {
 	int err;
 	int x, y;
-	uint8_t *src, *dest;
 	
 	char *cur_app_abs_dir = get_cur_app_abs_dir();
 	PT_PicFileParser pBMPParser = GetBMPParserInit();
@@ -133,18 +132,10 @@ static int devmgr_ui_backgroud_prepare(void)
 	devmgr_device_ui_on_pixels.iBpp  = 32;  /* PIXMAN_x8r8g8b8 */
 	err |= pBMPParser->GetPixelDatas(&tFileMapDeviceUIon,  &devmgr_device_ui_on_pixels);
 
-	memcpy(&devmgr_device_ui_off_pixels, &devmgr_device_ui_on_pixels, sizeof(devmgr_device_ui_off_pixels));
-	devmgr_device_ui_off_pixels.aucPixelDatas = g_malloc0(devmgr_device_ui_off_pixels.iTotalBytes);
-
 	x = FB_FIRST_BUTTON_X;
-	src  = devmgr_mem_pixels.aucPixelDatas + FB_FIRST_BUTTON_Y*devmgr_mem_pixels.iLineBytes + x*(devmgr_mem_pixels.iBpp>>3);
-	dest = devmgr_device_ui_off_pixels.aucPixelDatas;
-	for (y = 0; y < devmgr_device_ui_off_pixels.iHeight; y++)
-	{
-		memcpy(dest, src, devmgr_device_ui_off_pixels.iLineBytes);
-		src  += devmgr_mem_pixels.iLineBytes;
-		dest += devmgr_device_ui_off_pixels.iLineBytes;
-	}
+	y = FB_FIRST_BUTTON_Y;	
+
+	pBMPParser->CopyRegionPixelDatas(&devmgr_device_ui_off_pixels, &devmgr_mem_pixels, x, y, devmgr_device_ui_on_pixels.iWidth, devmgr_device_ui_on_pixels.iHeight);
 	
 	UnMapFile(&tFileMapDevMgr);
 	UnMapFile(&tFileMapDeviceUIon);
@@ -406,6 +397,9 @@ static void devmgr_realize(DeviceState *dev, Error **errp)
 	invalidate = 1;
 
 	ds->s = qemu_input_handler_register(dev, &devmgr_mouse_handler);
+
+	// can not bind all input handler, or : qemu_input_is_absolute is false
+	// qemu_input_handler_bind(ds->s, dev->id, 0, NULL);
 	qemu_input_handler_activate(ds->s);
 	
 }

@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include "qemu/osdep.h"
 #include "ui/file.h"
 #include "ui/pic_operation.h"
 #include "ui/picfmt_manager.h"
@@ -34,12 +35,14 @@ typedef struct tagBITMAPINFOHEADER { /* bmih */
 static int isBMPFormat(PT_FileMap ptFileMap);
 static int GetPixelDatasFrmBMP(PT_FileMap ptFileMap, PT_PixelDatas ptPixelDatas);
 static int FreePixelDatasForBMP(PT_PixelDatas ptPixelDatas);
+static int CopyRegionPixelDatasFrmRGB(PT_PixelDatas ptReginPixelDatas, PT_PixelDatas ptPixelDatas, int x, int y, int width, int height);
 
 static T_PicFileParser g_tBMPParser = {
-	.name           = "bmp",
-	.isSupport      = isBMPFormat,
-	.GetPixelDatas  = GetPixelDatasFrmBMP,
-	.FreePixelDatas = FreePixelDatasForBMP,	
+	.name                 = "bmp",
+	.isSupport            = isBMPFormat,
+	.GetPixelDatas        = GetPixelDatasFrmBMP,
+	.FreePixelDatas       = FreePixelDatasForBMP,	
+	.CopyRegionPixelDatas = CopyRegionPixelDatasFrmRGB,
 };
 
 /**********************************************************************
@@ -214,6 +217,33 @@ static int FreePixelDatasForBMP(PT_PixelDatas ptPixelDatas)
 	free(ptPixelDatas->aucPixelDatas);
 	return 0;
 }
+
+static int CopyRegionPixelDatasFrmRGB(PT_PixelDatas ptReginPixelDatas, PT_PixelDatas ptPixelDatas, int x, int y, int width, int height)
+{
+	unsigned char *src, *dest;
+	
+	ptReginPixelDatas->iWidth  = width;
+	ptReginPixelDatas->iHeight = height;
+	ptReginPixelDatas->iBpp    = ptPixelDatas->iBpp;
+	ptReginPixelDatas->iLineBytes  = width * (ptReginPixelDatas->iBpp >> 3);
+	ptReginPixelDatas->iTotalBytes = ptReginPixelDatas->iLineBytes * height;
+
+	ptReginPixelDatas->aucPixelDatas = g_malloc0(ptReginPixelDatas->iTotalBytes);
+	if (!ptReginPixelDatas->aucPixelDatas)
+		return -1;
+
+	src  = ptPixelDatas->aucPixelDatas + y*ptPixelDatas->iLineBytes + x*(ptPixelDatas->iBpp>>3);
+	dest = ptReginPixelDatas->aucPixelDatas;
+	while (height--)
+	{
+		memcpy(dest, src, ptReginPixelDatas->iLineBytes);
+		src  += ptPixelDatas->iLineBytes;
+		dest += ptReginPixelDatas->iLineBytes;
+	}
+	
+	return 0;
+}
+
 
 /**********************************************************************
  * 函数名称： GetBMPParserInit

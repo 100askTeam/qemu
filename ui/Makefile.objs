@@ -17,6 +17,7 @@ common-obj-$(CONFIG_VNC) += $(vnc-obj-y)
 common-obj-$(call lnot,$(CONFIG_VNC)) += vnc-stubs.o
 
 common-obj-y += bmp.o file.o fonts.o at24c02_ui.o
+common-obj-$(CONFIG_FSL_IMX6UL) += button_ui.o
 
 # ui-sdl module
 common-obj-$(CONFIG_SDL) += sdl.mo

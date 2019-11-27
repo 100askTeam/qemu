@@ -28,6 +28,7 @@
 #include "hw/i2c/i2c.h"
 #include "hw/signal_analysis/sample.h"
 #include "hw/display/device_manager.h"
+#include "hw/gpio/100ask_imx6ull_buttons.h"
 
 
 #define NAME_SIZE 20
@@ -562,6 +563,8 @@ static void fsl_imx6ul_realize(DeviceState *dev, Error **errp)
      * AT24C02, 100ask
      */
 	i2c_create_slave(s->i2c[0].bus, "at24c-eeprom", 0x50);
+
+	create_imx6ull_buttons();
 
     /*
      * ROM memory
