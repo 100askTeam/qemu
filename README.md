@@ -104,4 +104,4 @@ sudo apt-get install  libpixman-1-dev
 
 然后就可以执行  `qemu-imx6ul-gui.sh` 或 `qemu-imx6ul-nogui.sh`来使用您编译出来的QEMU了
 
-
+![输入图片说明](https://qemu.oss-cn-shenzhen.aliyuncs.com/qemu_git_show.gif "")
